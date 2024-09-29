@@ -32,7 +32,7 @@ class Dialogue(BaseModel):
     """The dialogue between the host and guest."""
 
     scratchpad: str
-    participants: List[str]
+    name_of_guest: str
     dialogue: List[DialogueItem]
 
 
@@ -49,13 +49,16 @@ def generate_podcast(file: str) -> Tuple[str, str]:
 
     # Process the dialogue
     audio_segments = []
-    transcript = ""
+    transcript = "" # start with an empty transcript
     total_characters = 0
 
     for line in llm_output.dialogue:
         logger.info(f"Generating audio for {line.speaker}: {line.text}")
-        transcript_line = f"{line.speaker}: {line.text}"
-        transcript += transcript_line + "\n\n"
+        if line.speaker == "Host (Jane)":
+            speaker = f"**Jane**: {line.text}"
+        else:
+            speaker = f"**{llm_output.name_of_guest}**: {line.text}"
+        transcript += speaker + "\n\n"
         total_characters += len(line.text)
 
         # Get audio file path
@@ -99,10 +102,11 @@ demo = gr.Interface(
     ],
     outputs=[
         gr.Audio(label="Audio", format="mp3"),
-        gr.Textbox(label="Transcript"),
+        gr.Markdown(label="Transcript"),
     ],
     allow_flagging="never",
     api_name=False,
+    theme=gr.themes.Soft()
 )
 
 if __name__ == "__main__":

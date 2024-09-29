@@ -98,6 +98,7 @@ demo = gr.Interface(
     inputs=[
         gr.File(
             label="PDF",
+            file_types=[".pdf", "file/*"],
         ),
     ],
     outputs=[

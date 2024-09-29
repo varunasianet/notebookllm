@@ -13,13 +13,15 @@ from typing import List, Literal, Tuple, Optional
 # Third-party imports
 import gradio as gr
 from loguru import logger
+from openai import OpenAI
 from pydantic import BaseModel
 from pypdf import PdfReader
 from pydub import AudioSegment
 
 # Local imports
 from prompts import SYSTEM_PROMPT
-from utils import generate_script, generate_audio
+from utils import generate_script, generate_audio, parse_url
+
 
 class DialogueItem(BaseModel):
     """A single dialogue item."""
@@ -36,24 +38,55 @@ class Dialogue(BaseModel):
     dialogue: List[DialogueItem]
 
 
-def generate_podcast(file: str, tone: Optional[str] = None, length: Optional[str] = None) -> Tuple[str, str]:
-    """Generate the audio and transcript from the PDF."""
-    # Check if the file is a PDF
-    if not file.lower().endswith('.pdf'):
-        raise gr.Error("Please upload a PDF file.")
+def generate_podcast(
+    files: List[str],
+    url: Optional[str],
+    tone: Optional[str],
+    length: Optional[str],
+    language: str
+) -> Tuple[str, str]:
+    """Generate the audio and transcript from the PDFs and/or URL."""
+    text = ""
 
-    # Read the PDF file and extract text
-    try:
-        with Path(file).open("rb") as f:
-            reader = PdfReader(f)
-            text = "\n\n".join([page.extract_text() for page in reader.pages])
-    except Exception as e:
-        raise gr.Error(f"Error reading the PDF file: {str(e)}")
-    
-    # Check if the PDF has more than ~150,000 characters
+    # Change language to the appropriate code
+    language_mapping = {
+        "English": "EN",
+        "Spanish": "ES",
+        "French": "FR",
+        "Chinese": "ZH",
+        "Japanese": "JP",
+        "Korean": "KR",
+    }
+
+    # Check if at least one input is provided
+    if not files and not url:
+        raise gr.Error("Please provide at least one PDF file or a URL.")
+
+    # Process PDFs if any
+    if files:
+        for file in files:
+            if not file.lower().endswith('.pdf'):
+                raise gr.Error(f"File {file} is not a PDF. Please upload only PDF files.")
+
+            try:
+                with Path(file).open("rb") as f:
+                    reader = PdfReader(f)
+                    text += "\n\n".join([page.extract_text() for page in reader.pages])
+            except Exception as e:
+                raise gr.Error(f"Error reading the PDF file {file}: {str(e)}")
+
+    # Process URL if provided
+    if url:
+        try:
+            url_text = parse_url(url)
+            text += "\n\n" + url_text
+        except ValueError as e:
+            raise gr.Error(str(e))
+
+    # Check total character count
     if len(text) > 100000:
-        raise gr.Error("The PDF is too long. Please upload a PDF with fewer than ~100,000 characters.")
-
+        raise gr.Error("The total content is too long. Please ensure the combined text from PDFs and URL is fewer than ~100,000 characters.")
+    
     # Modify the system prompt based on the chosen tone and length
     modified_system_prompt = SYSTEM_PROMPT
     if tone:
@@ -64,6 +97,8 @@ def generate_podcast(file: str, tone: Optional[str] = None, length: Optional[str
             "Medium (3-5 min)": "Aim for a moderate length, about 3-5 minutes.",
         }
         modified_system_prompt += f"\n\nLENGTH: {length_instructions[length]}"
+    if language:
+        modified_system_prompt += f"\n\nOUTPUT LANGUAGE <IMPORTANT>: The the podcast should be {language}."
 
     # Call the LLM
     llm_output = generate_script(modified_system_prompt, text, Dialogue)
@@ -71,7 +106,7 @@ def generate_podcast(file: str, tone: Optional[str] = None, length: Optional[str
 
     # Process the dialogue
     audio_segments = []
-    transcript = "" # start with an empty transcript
+    transcript = ""
     total_characters = 0
 
     for line in llm_output.dialogue:
@@ -84,7 +119,7 @@ def generate_podcast(file: str, tone: Optional[str] = None, length: Optional[str
         total_characters += len(line.text)
 
         # Get audio file path
-        audio_file_path = generate_audio(line.text, line.speaker)
+        audio_file_path = generate_audio(line.text, line.speaker, language_mapping[language])
         # Read the audio file into an AudioSegment
         audio_segment = AudioSegment.from_file(audio_file_path)
         audio_segments.append(audio_segment)
@@ -115,22 +150,32 @@ def generate_podcast(file: str, tone: Optional[str] = None, length: Optional[str
 
 demo = gr.Interface(
     title="Open NotebookLM",
-    description="Convert your PDFs into podcasts with open-source AI models (Llama 3.1 405B and MeloTTS). \n \n Note: Only the text content of the PDF will be processed. Images and tables are not included. The PDF should be no more than 100,000 characters due to the context length of Llama 3.1 405B.",
+    description="Convert your PDFs into podcasts with open-source AI models (Llama 3.1 405B and MeloTTS). \n \n Note: Only the text content of the PDFs will be processed. Images and tables are not included. The total content should be no more than 100,000 characters due to the context length of Llama 3.1 405B.",
     fn=generate_podcast,
     inputs=[
         gr.File(
-            label="PDF",
-            file_types=[".pdf", "file/*"],
+            label="1. 📄 Upload your PDF(s)",
+            file_types=[".pdf"],
+            file_count="multiple"
+        ),
+        gr.Textbox(
+            label="2. 🔗 Paste a URL (optional)",
+            placeholder="Enter a URL to include its content"
         ),
         gr.Radio(
             choices=["Fun", "Formal"],
-            label="Tone of the podcast",
-            value="casual"
+            label="3. 🎭 Choose the tone",
+            value="Fun"
         ),
         gr.Radio(
             choices=["Short (1-2 min)", "Medium (3-5 min)"],
-            label="Length of the podcast",
+            label="4. ⏱️ Choose the length",
             value="Medium (3-5 min)"
+        ),
+        gr.Dropdown(
+            choices=["English", "Spanish", "French", "Chinese", "Japanese", "Korean"],
+            value="English",
+            label="5. 🌐 Choose the language (Highly experimental, English is recommended)",
         ),
     ],
     outputs=[
@@ -138,7 +183,7 @@ demo = gr.Interface(
         gr.Markdown(label="Transcript"),
     ],
     allow_flagging="never",
-    api_name="generate_podcast",  # Add this line
+    api_name="generate_podcast",
     theme=gr.themes.Soft(),
     concurrency_limit=3
 )

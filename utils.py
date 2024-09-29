@@ -8,12 +8,14 @@ Functions:
 """
 
 import os
+import requests
 
 from gradio_client import Client
 from openai import OpenAI
 from pydantic import ValidationError
 
 MODEL_ID = "accounts/fireworks/models/llama-v3p1-405b-instruct"
+JINA_URL = "https://r.jina.ai/"
 
 client = OpenAI(
     base_url="https://api.fireworks.ai/inference/v1",
@@ -59,15 +61,26 @@ def call_llm(system_prompt: str, text: str, dialogue_format):
     return response
 
 
-def generate_audio(text: str, speaker: str) -> str:
-    """Get the audio from the TTS model from HF Spaces."""
+def parse_url(url: str) -> str:
+    """Parse the given URL and return the text content."""
+    full_url = f"{JINA_URL}{url}"
+    response = requests.get(full_url, timeout=60)
+    return response.text
+
+
+def generate_audio(text: str, speaker: str, language: str) -> bytes:
+    """Get the audio from the TTS model from HF Spaces and adjust pitch if necessary."""
     if speaker == "Guest":
-        accent = "EN-US"
+        accent = "EN-US" if language == "EN" else language
         speed = 0.9
     else:  # host
-        accent = "EN-Default"
+        accent = "EN-Default" if language == "EN" else language
         speed = 1
+    if language != "EN" and speaker != "Guest":
+        speed = 1.1
+    
+    # Generate audio
     result = hf_client.predict(
-        text=text, language="EN", speaker=accent, speed=speed, api_name="/synthesize"
+        text=text, language=language, speaker=accent, speed=speed, api_name="/synthesize"
     )
     return result

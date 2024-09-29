@@ -1,8 +1,8 @@
-# Open PDF to Podcast
+# Open NotebookLM
 
 ## Overview
 
-This project provides a tool to convert any PDF document into a podcast episode! Leveraging open-source LLMs and text-to-speech models, this tool processes the content of a PDF, generates a natural dialogue suitable for an audio podcast, and outputs it as an MP3 file.
+This project is inspired by the NotebookLM tool, and implements it with open-source LLMs and text-to-speech models. This tool processes the content of a PDF, generates a natural dialogue suitable for an audio podcast, and outputs it as an MP3 file.
 
 ## Features
 

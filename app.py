@@ -139,8 +139,9 @@ demo = gr.Interface(
     ],
     allow_flagging="never",
     api_name="generate_podcast",  # Add this line
-    theme=gr.themes.Soft()
+    theme=gr.themes.Soft(),
+    concurrency_limit=5
 )
 
 if __name__ == "__main__":
-    demo.queue(concurrency_count=3).launch(show_api=True)  # Add queue with concurrency of 5 and show API
+    demo.launch(show_api=True)

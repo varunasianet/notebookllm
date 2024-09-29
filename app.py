@@ -140,7 +140,7 @@ demo = gr.Interface(
     allow_flagging="never",
     api_name="generate_podcast",  # Add this line
     theme=gr.themes.Soft(),
-    concurrency_limit=5
+    concurrency_limit=3
 )
 
 if __name__ == "__main__":

@@ -89,7 +89,7 @@ def generate_podcast(file: str) -> Tuple[str, str]:
 
 
 demo = gr.Interface(
-    title="OpenPodcast",
+    title="Open NotebookLM",
     description="Convert your PDFs into podcasts with open-source AI models.",
     fn=generate_podcast,
     inputs=[

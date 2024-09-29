@@ -115,13 +115,12 @@ def generate_podcast(file: str, tone: Optional[str] = None, length: Optional[str
 
 demo = gr.Interface(
     title="Open NotebookLM",
-    description="Convert your PDFs into podcasts with open-source AI models (Llama 3.1 405B and MeloTTS).",
+    description="Convert your PDFs into podcasts with open-source AI models (Llama 3.1 405B and MeloTTS). \n \n Note: Only the text content of the PDF will be processed. Images and tables are not included. The PDF should be no more than 100,000 characters due to the context length of Llama 3.1 405B.",
     fn=generate_podcast,
     inputs=[
         gr.File(
             label="PDF",
             file_types=[".pdf", "file/*"],
-            description="Upload a PDF file. Note: Only the text content of the PDF will be processed. Images and tables are not included. The PDF should be no more than 100,000 characters due to the context length of Llama 3.1 405B.",
         ),
         gr.Radio(
             choices=["Fun", "Formal"],

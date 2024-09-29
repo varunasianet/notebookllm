@@ -13,6 +13,8 @@ from gradio_client import Client
 from openai import OpenAI
 from pydantic import ValidationError
 
+MODEL_ID = "accounts/fireworks/models/llama-v3p1-405b-instruct"
+
 client = OpenAI(
     base_url="https://api.fireworks.ai/inference/v1",
     api_key=os.getenv("FIREWORKS_API_KEY"),
@@ -46,7 +48,7 @@ def call_llm(system_prompt: str, text: str, dialogue_format):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text},
         ],
-        model="accounts/fireworks/models/llama-v3p1-405b-instruct",
+        model=MODEL_ID,
         max_tokens=16_384,
         temperature=0.1,
         response_format={

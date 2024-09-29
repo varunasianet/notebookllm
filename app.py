@@ -12,8 +12,6 @@ from typing import List, Literal, Tuple
 
 # Third-party imports
 import gradio as gr
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from pydantic import BaseModel
 from pypdf import PdfReader
@@ -22,11 +20,6 @@ from pydub import AudioSegment
 # Local imports
 from prompts import SYSTEM_PROMPT
 from utils import generate_script, generate_audio
-
-app = FastAPI()
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 
 class DialogueItem(BaseModel):
     """A single dialogue item."""
@@ -111,8 +104,6 @@ demo = gr.Interface(
     allow_flagging="never",
     api_name=False,
 )
-
-app = gr.mount_gradio_app(app, demo, path="/")
 
 if __name__ == "__main__":
     demo.launch(show_api=False)

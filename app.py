@@ -8,7 +8,7 @@ import os
 import time
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import List, Literal, Tuple
+from typing import List, Literal, Tuple, Optional
 
 # Third-party imports
 import gradio as gr
@@ -36,15 +36,37 @@ class Dialogue(BaseModel):
     dialogue: List[DialogueItem]
 
 
-def generate_podcast(file: str) -> Tuple[str, str]:
+def generate_podcast(file: str, tone: Optional[str] = None, length: Optional[str] = None) -> Tuple[str, str]:
     """Generate the audio and transcript from the PDF."""
+    # Check if the file is a PDF
+    if not file.lower().endswith('.pdf'):
+        raise gr.Error("Please upload a PDF file.")
+
     # Read the PDF file and extract text
-    with Path(file).open("rb") as f:
-        reader = PdfReader(f)
-        text = "\n\n".join([page.extract_text() for page in reader.pages])
+    try:
+        with Path(file).open("rb") as f:
+            reader = PdfReader(f)
+            text = "\n\n".join([page.extract_text() for page in reader.pages])
+    except Exception as e:
+        raise gr.Error(f"Error reading the PDF file: {str(e)}")
+    
+    # Check if the PDF has more than ~150,000 characters
+    if len(text) > 100000:
+        raise gr.Error("The PDF is too long. Please upload a PDF with fewer than ~100,000 characters.")
+
+    # Modify the system prompt based on the chosen tone and length
+    modified_system_prompt = SYSTEM_PROMPT
+    if tone:
+        modified_system_prompt += f"\n\nTONE: The tone of the podcast should be {tone}."
+    if length:
+        length_instructions = {
+            "Short (1-2 min)": "Keep the podcast brief, around 1-2 minutes long.",
+            "Medium (3-5 min)": "Aim for a moderate length, about 3-5 minutes.",
+        }
+        modified_system_prompt += f"\n\nLENGTH: {length_instructions[length]}"
 
     # Call the LLM
-    llm_output = generate_script(SYSTEM_PROMPT, text, Dialogue)
+    llm_output = generate_script(modified_system_prompt, text, Dialogue)
     logger.info(f"Generated dialogue: {llm_output}")
 
     # Process the dialogue
@@ -99,6 +121,16 @@ demo = gr.Interface(
         gr.File(
             label="PDF",
             file_types=[".pdf", "file/*"],
+        ),
+        gr.Radio(
+            choices=["Fun", "Formal"],
+            label="Tone of the podcast",
+            value="casual"
+        ),
+        gr.Radio(
+            choices=["Short (1-2 min)", "Medium (3-5 min)"],
+            label="Length of the podcast",
+            value="Medium (3-5 min)"
         ),
     ],
     outputs=[

@@ -23,19 +23,19 @@ client = OpenAI(
 hf_client = Client("mrfakename/MeloTTS")
 
 
-def generate_script(system_prompt: str, text: str, dialogue_format):
+def generate_script(system_prompt: str, input_text: str, output_model):
     """Get the dialogue from the LLM."""
     # Load as python object
     try:
-        response = call_llm(system_prompt, text, dialogue_format)
-        dialogue = dialogue_format.model_validate_json(
+        response = call_llm(system_prompt, input_text, output_model)
+        dialogue = output_model.model_validate_json(
             response.choices[0].message.content
         )
     except ValidationError as e:
         error_message = f"Failed to parse dialogue JSON: {e}"
-        system_prompt_with_error = f"{system_prompt}\n\n Please return a VALID JSON object. This was the earlier error: {error_message}"
-        response = call_llm(system_prompt_with_error, text, dialogue_format)
-        dialogue = dialogue_format.model_validate_json(
+        system_prompt_with_error = f"{system_prompt}\n\nPlease return a VALID JSON object. This was the earlier error: {error_message}"
+        response = call_llm(system_prompt_with_error, input_text, output_model)
+        dialogue = output_model.model_validate_json(
             response.choices[0].message.content
         )
     return dialogue

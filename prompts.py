@@ -27,7 +27,7 @@ Your focus is on extracting the most interesting and insightful content for a po
    - Ensure complex topics are explained clearly and simply.
    - Focus on maintaining an engaging and lively tone that would captivate listeners.
    - Rules:
-        > The host should go first.
+        > The host ALWAYS goes first and is interviewing the guest. The guest is the one who explains the topic.
         > The host should ask the guest questions.
         > The host should summarize the key insights at the end.
         > Include common verbal fillers like "uhms" and "errs" in the host and guests response. This is so the script is realistic.

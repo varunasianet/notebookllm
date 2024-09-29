@@ -49,7 +49,7 @@ To set up the project, follow these steps:
 
 2. **Run the application:**
    ```bash
-   python main.py
+   python app.py
    ```
    This will launch a Gradio interface in your web browser.
 

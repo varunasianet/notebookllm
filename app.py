@@ -138,9 +138,9 @@ demo = gr.Interface(
         gr.Markdown(label="Transcript"),
     ],
     allow_flagging="never",
-    api_name=False,
+    api_name="generate_podcast",  # Add this line
     theme=gr.themes.Soft()
 )
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(show_api=True)  # Add show_api=True

@@ -121,6 +121,7 @@ demo = gr.Interface(
         gr.File(
             label="PDF",
             file_types=[".pdf", "file/*"],
+            description="Upload a PDF file. Note: Only the text content of the PDF will be processed. Images and tables are not included. The PDF should be no more than 100,000 characters due to the context length of Llama 3.1 405B.",
         ),
         gr.Radio(
             choices=["Fun", "Formal"],

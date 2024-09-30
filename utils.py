@@ -9,6 +9,7 @@ Functions:
 
 import os
 import requests
+import time
 from gradio_client import Client
 from openai import OpenAI
 from pydantic import ValidationError
@@ -102,11 +103,17 @@ def generate_podcast_audio(text: str, speaker: str, language: str, use_advanced_
             speed = 1.1
 
         # Generate audio
-        result = hf_client.predict(
-            text=text,
-            language=language,
-            speaker=accent,
-            speed=speed,
-            api_name="/synthesize",
-        )
-        return result
+        for attempt in range(3):
+            try:
+                result = hf_client.predict(
+                    text=text,
+                    language=language,
+                    speaker=accent,
+                    speed=speed,
+                    api_name="/synthesize",
+                )
+                return result
+            except Exception as e:
+                if attempt == 2:  # Last attempt
+                    raise  # Re-raise the last exception if all attempts fail
+                time.sleep(1)  # Wait for 1 second before retrying

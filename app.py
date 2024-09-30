@@ -117,6 +117,7 @@ def generate_podcast(
         raise gr.Error(
             "The total content is too long. Please ensure the combined text from PDFs and URL is fewer than ~100,000 characters."
         )
+    
 
     # Modify the system prompt based on the user input
     modified_system_prompt = SYSTEM_PROMPT
@@ -155,6 +156,9 @@ def generate_podcast(
             speaker = f"**{llm_output.name_of_guest}**: {line.text}"
         transcript += speaker + "\n\n"
         total_characters += len(line.text)
+
+        if not use_advanced_audio:
+            LANGUAGE_MAPPING = MELO_TTS_LANGUAGE_MAPPING
 
         # Get audio file path
         audio_file_path = generate_podcast_audio(

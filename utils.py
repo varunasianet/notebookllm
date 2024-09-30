@@ -24,7 +24,7 @@ client = OpenAI(
     api_key=os.getenv("FIREWORKS_API_KEY"),
 )
 
-# hf_client = Client("mrfakename/MeloTTS")
+hf_client = Client("mrfakename/MeloTTS")
 
 # download and load all models
 preload_models()
@@ -78,34 +78,35 @@ def parse_url(url: str) -> str:
     return response.text
 
 
-def generate_podcast_audio(text: str, speaker: str, language: str) -> str:
+def generate_podcast_audio(text: str, speaker: str, language: str, use_advanced_audio: bool) -> str:
 
-    audio_array = generate_audio(text, history_prompt=f"v2/{language}_speaker_{'1' if speaker == 'Host (Jane)' else '3'}")
+    if use_advanced_audio:
+        audio_array = generate_audio(text, history_prompt=f"v2/{language}_speaker_{'1' if speaker == 'Host (Jane)' else '3'}")
 
-    file_path = f"audio_{language}_{speaker}.mp3"
+        file_path = f"audio_{language}_{speaker}.mp3"
 
-    # save audio to disk
-    write_wav(file_path, SAMPLE_RATE, audio_array)
+        # save audio to disk
+        write_wav(file_path, SAMPLE_RATE, audio_array)
 
-    return file_path
+        return file_path
 
 
-    # """Get the audio from the TTS model from HF Spaces and adjust pitch if necessary."""
-    # if speaker == "Guest":
-    #     accent = "EN-US" if language == "EN" else language
-    #     speed = 0.9
-    # else:  # host
-    #     accent = "EN-Default" if language == "EN" else language
-    #     speed = 1
-    # if language != "EN" and speaker != "Guest":
-    #     speed = 1.1
+    else:
+        if speaker == "Guest":
+            accent = "EN-US" if language == "EN" else language
+            speed = 0.9
+        else:  # host
+            accent = "EN-Default" if language == "EN" else language
+            speed = 1
+        if language != "EN" and speaker != "Guest":
+            speed = 1.1
 
-    # # Generate audio
-    # result = hf_client.predict(
-    #     text=text,
-    #     language=language,
-    #     speaker=accent,
-    #     speed=speed,
-    #     api_name="/synthesize",
-    # )
-    # return result
+        # Generate audio
+        result = hf_client.predict(
+            text=text,
+            language=language,
+            speaker=accent,
+            speed=speed,
+            api_name="/synthesize",
+        )
+        return result

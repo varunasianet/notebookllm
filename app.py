@@ -37,6 +37,15 @@ LANGUAGE_MAPPING = {
     "Turkish": "tr"
 }
 
+MELO_TTS_LANGUAGE_MAPPING = {
+    "English": "EN",
+    "Spanish": "ES",
+    "French": "FR",
+    "Chinese": "ZJ",
+    "Japanese": "JP",
+    "Korean": "KR",
+}
+
 class DialogueItem(BaseModel):
     """A single dialogue item."""
 
@@ -67,19 +76,14 @@ def generate_podcast(
     tone: Optional[str],
     length: Optional[str],
     language: str,
+    use_advanced_audio: bool,
 ) -> Tuple[str, str]:
     """Generate the audio and transcript from the PDFs and/or URL."""
     text = ""
 
-    # Change language to the appropriate code
-    language_mapping = {
-        "English": "EN",
-        "Spanish": "ES",
-        "French": "FR",
-        "Chinese": "ZH",
-        "Japanese": "JP",
-        "Korean": "KR",
-    }
+    # Check if the selected language is supported by MeloTTS when not using advanced audio
+    if not use_advanced_audio and language not in MELO_TTS_LANGUAGE_MAPPING:
+        raise gr.Error(f"The selected language '{language}' is not supported without advanced audio generation. Please enable advanced audio generation or choose a supported language.")
 
     # Check if at least one input is provided
     if not files and not url:
@@ -154,7 +158,7 @@ def generate_podcast(
 
         # Get audio file path
         audio_file_path = generate_podcast_audio(
-            line.text, line.speaker, LANGUAGE_MAPPING[language]
+            line.text, line.speaker, LANGUAGE_MAPPING[language], use_advanced_audio
         )
         # Read the audio file into an AudioSegment
         audio_segment = AudioSegment.from_file(audio_file_path)
@@ -191,7 +195,7 @@ demo = gr.Interface(
 <table style="border-collapse: collapse; border: none; padding: 20px;">
   <tr style="border: none;">
     <td style="border: none; vertical-align: top; padding-right: 30px; padding-left: 30px;">
-      <img src="https://raw.githubusercontent.com/gabrielchua/daily-ai-papers/main/_include/icon.png" alt="Open NotebookLM" width="120" style="margin-bottom: 10px;">
+      <img src="https://raw.githubusercontent.com/gabrielchua/daily-ai-papers/main/_includes/icon.png" alt="Open NotebookLM" width="120" style="margin-bottom: 10px;">
     </td>
     <td style="border: none; vertical-align: top; padding: 10px;">
       <p style="margin-bottom: 15px;"><strong>Convert</strong> your PDFs into podcasts with open-source AI models (Llama 3.1 405B and MeloTTS).</p>
@@ -225,6 +229,10 @@ demo = gr.Interface(
             value="English",
             label="6. 🌐 Choose the language"
         ),
+        gr.Checkbox(
+            label="7. 🔄 Use advanced audio generation? (Experimental)",
+            value=False
+        )
     ],
     outputs=[
         gr.Audio(label="Podcast", format="mp3"),
@@ -242,23 +250,26 @@ demo = gr.Interface(
             "Fun",
             "Short (1-2 min)",
             "English",
+            True
         ],
-    #     [
-    #         [],
-    #         "https://en.wikipedia.org/wiki/Hugging_Face",
-    #         "How did Hugging Face become so successful?",
-    #         "Fun",
-    #         "Short (1-2 min)",
-    #         "English",
-    #     ],
-    #     [
-    #         [],
-    #         "https://simple.wikipedia.org/wiki/Taylor_Swift",
-    #         "Why is Taylor Swift so popular?",
-    #         "Fun",
-    #         "Short (1-2 min)",
-    #         "English",
-    #     ],
+        [
+            [],
+            "https://en.wikipedia.org/wiki/Hugging_Face",
+            "How did Hugging Face become so successful?",
+            "Fun",
+            "Short (1-2 min)",
+            "English",
+            False
+        ],
+        [
+            [],
+            "https://simple.wikipedia.org/wiki/Taylor_Swift",
+            "Why is Taylor Swift so popular?",
+            "Fun",
+            "Short (1-2 min)",
+            "English",
+            False
+        ],
     ],
     cache_examples=True,
 )

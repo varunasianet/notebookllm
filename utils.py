@@ -78,7 +78,7 @@ def parse_url(url: str) -> str:
     return response.text
 
 
-def generate_audio(text: str, speaker: str, language: str) -> str:
+def generate_podcast_audio(text: str, speaker: str, language: str) -> str:
 
     audio_array = generate_audio(text, history_prompt=f"v2/{language}_speaker_{'1' if speaker == 'Host (Jane)' else '3'}")
 

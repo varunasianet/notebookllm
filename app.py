@@ -19,7 +19,7 @@ from pydub import AudioSegment
 
 # Local imports
 from prompts import SYSTEM_PROMPT
-from utils import generate_script, generate_audio, parse_url
+from utils import generate_script, generate_podcast_audio, parse_url
 
 LANGUAGE_MAPPING = {
     "English": "en",
@@ -153,7 +153,7 @@ def generate_podcast(
         total_characters += len(line.text)
 
         # Get audio file path
-        audio_file_path = generate_audio(
+        audio_file_path = generate_podcast_audio(
             line.text, line.speaker, LANGUAGE_MAPPING[language]
         )
         # Read the audio file into an AudioSegment
@@ -243,22 +243,22 @@ demo = gr.Interface(
             "Short (1-2 min)",
             "English",
         ],
-        [
-            [],
-            "https://en.wikipedia.org/wiki/Hugging_Face",
-            "How did Hugging Face become so successful?",
-            "Fun",
-            "Short (1-2 min)",
-            "English",
-        ],
-        [
-            [],
-            "https://simple.wikipedia.org/wiki/Taylor_Swift",
-            "Why is Taylor Swift so popular?",
-            "Fun",
-            "Short (1-2 min)",
-            "English",
-        ],
+    #     [
+    #         [],
+    #         "https://en.wikipedia.org/wiki/Hugging_Face",
+    #         "How did Hugging Face become so successful?",
+    #         "Fun",
+    #         "Short (1-2 min)",
+    #         "English",
+    #     ],
+    #     [
+    #         [],
+    #         "https://simple.wikipedia.org/wiki/Taylor_Swift",
+    #         "Why is Taylor Swift so popular?",
+    #         "Fun",
+    #         "Short (1-2 min)",
+    #         "English",
+    #     ],
     ],
     cache_examples=True,
 )

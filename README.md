@@ -27,8 +27,8 @@ To set up the project, follow these steps:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/gabrielchua/open-pdf2podcast.git
-   cd pdf-to-podcast
+   git clone https://github.com/gabrielchua/open-notebooklm.git
+   cd open-notebooklm
    ```
 
 2. **Create a virtual environment and activate it:**

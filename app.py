@@ -176,7 +176,7 @@ demo = gr.Interface(
 <table style="border-collapse: collapse; border: none; padding: 20px;">
   <tr style="border: none;">
     <td style="border: none; vertical-align: top; padding-right: 30px; padding-left: 30px;">
-      <img src="https://raw.githubusercontent.com/gabrielchua/open-notebooklm/main/icon.png" alt="Open NotebookLM" width="120" style="margin-bottom: 10px;">
+      <img src="https://raw.githubusercontent.com/gabrielchua/daily-ai-papers/main/_include/icon.png" alt="Open NotebookLM" width="120" style="margin-bottom: 10px;">
     </td>
     <td style="border: none; vertical-align: top; padding: 10px;">
       <p style="margin-bottom: 15px;"><strong>Convert</strong> your PDFs into podcasts with open-source AI models (Llama 3.1 405B and MeloTTS).</p>

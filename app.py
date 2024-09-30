@@ -45,6 +45,34 @@ class MediumDialogue(BaseModel):
     dialogue: List[DialogueItem] = Field(..., description="A list of dialogue items, typically between 8 to 13 items")
 
 
+LANGUAGE_MAPPING = {
+    "English": "en",
+    "Chinese": "zh",
+    "French": "fr",
+    "German": "de",
+    "Hindi": "hi",
+    "Italian": "it",
+    "Japanese": "ja",
+    "Korean": "ko",
+    "Polish": "pl",
+    "Portuguese": "pt",
+    "Russian": "ru",
+    "Spanish": "es",
+    "Turkish": "tr"
+}
+
+MELO_TTS_LANGUAGE_MAPPING = {
+    "en": "EN",
+    "es": "ES",
+    "fr": "FR",
+    "zh": "ZJ",
+    "ja": "JP",
+    "ko": "KR",
+}
+
+
+
+
 def generate_podcast(
     files: List[str],
     url: Optional[str],
@@ -56,30 +84,6 @@ def generate_podcast(
 ) -> Tuple[str, str]:
     """Generate the audio and transcript from the PDFs and/or URL."""
 
-    LANGUAGE_MAPPING = {
-        "English": "en",
-        "Chinese": "zh",
-        "French": "fr",
-        "German": "de",
-        "Hindi": "hi",
-        "Italian": "it",
-        "Japanese": "ja",
-        "Korean": "ko",
-        "Polish": "pl",
-        "Portuguese": "pt",
-        "Russian": "ru",
-        "Spanish": "es",
-        "Turkish": "tr"
-    }
-
-    MELO_TTS_LANGUAGE_MAPPING = {
-        "English": "EN",
-        "Spanish": "ES",
-        "French": "FR",
-        "Chinese": "ZJ",
-        "Japanese": "JP",
-        "Korean": "KR",
-    }
 
 
     text = ""
@@ -160,12 +164,14 @@ def generate_podcast(
         transcript += speaker + "\n\n"
         total_characters += len(line.text)
 
+        language_for_tts = language
+
         if not use_advanced_audio:
-            LANGUAGE_MAPPING = MELO_TTS_LANGUAGE_MAPPING
+            language_for_tts = MELO_TTS_LANGUAGE_MAPPING[language_for_tts]
 
         # Get audio file path
         audio_file_path = generate_podcast_audio(
-            line.text, line.speaker, LANGUAGE_MAPPING[language], use_advanced_audio
+            line.text, line.speaker, language_for_tts, use_advanced_audio
         )
         # Read the audio file into an AudioSegment
         audio_segment = AudioSegment.from_file(audio_file_path)

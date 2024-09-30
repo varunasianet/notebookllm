@@ -13,7 +13,6 @@ from typing import List, Literal, Tuple, Optional
 # Third-party imports
 import gradio as gr
 from loguru import logger
-from openai import OpenAI
 from pydantic import BaseModel
 from pypdf import PdfReader
 from pydub import AudioSegment
@@ -185,7 +184,25 @@ demo = gr.Interface(
     allow_flagging="never",
     api_name="generate_podcast",
     theme=gr.themes.Soft(),
-    concurrency_limit=3
+    concurrency_limit=3,
+    examples=[
+        [
+            [str(Path("examples/1310.4546v1.pdf"))],
+            "",
+            "Fun",
+            "Short (1-2 min)",
+            "English"
+        ],
+        [
+            [],
+            "https://en.wikipedia.org/wiki/Hugging_Face",
+            "Fun",
+            "Short (1-2 min)",
+            "English"
+        ],
+    ],
+    cache_examples=True,
+    examples_cache_dir="examples_cached"
 )
 
 if __name__ == "__main__":

@@ -224,6 +224,7 @@ demo = gr.Interface(
         ],
     ],
     cache_examples=True,
+    examples_cache_dir="examples_cached"
 )
 
 if __name__ == "__main__":

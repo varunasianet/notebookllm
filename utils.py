@@ -30,17 +30,22 @@ def generate_script(system_prompt: str, input_text: str, output_model):
     # Load as python object
     try:
         response = call_llm(system_prompt, input_text, output_model)
-        dialogue = output_model.model_validate_json(
-            response.choices[0].message.content
-        )
+        dialogue = output_model.model_validate_json(response.choices[0].message.content)
     except ValidationError as e:
         error_message = f"Failed to parse dialogue JSON: {e}"
         system_prompt_with_error = f"{system_prompt}\n\nPlease return a VALID JSON object. This was the earlier error: {error_message}"
         response = call_llm(system_prompt_with_error, input_text, output_model)
-        dialogue = output_model.model_validate_json(
-            response.choices[0].message.content
-        )
-    return dialogue
+        dialogue = output_model.model_validate_json(response.choices[0].message.content)
+
+    # Call the LLM again to improve the dialogue
+    system_prompt_with_dialogue = f"{system_prompt}\n\nHere is the first draft of the dialogue you provided:\n\n{dialogue}."
+    response = call_llm(
+        system_prompt_with_dialogue, "Please improve the dialogue.", output_model
+    )
+    improved_dialogue = output_model.model_validate_json(
+        response.choices[0].message.content
+    )
+    return improved_dialogue
 
 
 def call_llm(system_prompt: str, text: str, dialogue_format):
@@ -78,9 +83,13 @@ def generate_audio(text: str, speaker: str, language: str) -> bytes:
         speed = 1
     if language != "EN" and speaker != "Guest":
         speed = 1.1
-    
+
     # Generate audio
     result = hf_client.predict(
-        text=text, language=language, speaker=accent, speed=speed, api_name="/synthesize"
+        text=text,
+        language=language,
+        speaker=accent,
+        speed=speed,
+        api_name="/synthesize",
     )
     return result

@@ -13,7 +13,7 @@ from typing import List, Literal, Tuple, Optional
 # Third-party imports
 import gradio as gr
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pypdf import PdfReader
 from pydub import AudioSegment
 
@@ -29,20 +29,29 @@ class DialogueItem(BaseModel):
     text: str
 
 
-class Dialogue(BaseModel):
+class ShortDialogue(BaseModel):
     """The dialogue between the host and guest."""
 
     scratchpad: str
     name_of_guest: str
-    dialogue: List[DialogueItem]
+    dialogue: List[DialogueItem] = Field(..., description="A list of dialogue items, typically between 5 to 9 items")
+
+
+class MediumDialogue(BaseModel):
+    """The dialogue between the host and guest."""
+
+    scratchpad: str
+    name_of_guest: str
+    dialogue: List[DialogueItem] = Field(..., description="A list of dialogue items, typically between 8 to 13 items")
 
 
 def generate_podcast(
     files: List[str],
     url: Optional[str],
+    question: Optional[str],
     tone: Optional[str],
     length: Optional[str],
-    language: str
+    language: str,
 ) -> Tuple[str, str]:
     """Generate the audio and transcript from the PDFs and/or URL."""
     text = ""
@@ -64,8 +73,10 @@ def generate_podcast(
     # Process PDFs if any
     if files:
         for file in files:
-            if not file.lower().endswith('.pdf'):
-                raise gr.Error(f"File {file} is not a PDF. Please upload only PDF files.")
+            if not file.lower().endswith(".pdf"):
+                raise gr.Error(
+                    f"File {file} is not a PDF. Please upload only PDF files."
+                )
 
             try:
                 with Path(file).open("rb") as f:
@@ -84,10 +95,14 @@ def generate_podcast(
 
     # Check total character count
     if len(text) > 100000:
-        raise gr.Error("The total content is too long. Please ensure the combined text from PDFs and URL is fewer than ~100,000 characters.")
-    
-    # Modify the system prompt based on the chosen tone and length
+        raise gr.Error(
+            "The total content is too long. Please ensure the combined text from PDFs and URL is fewer than ~100,000 characters."
+        )
+
+    # Modify the system prompt based on the user input
     modified_system_prompt = SYSTEM_PROMPT
+    if question:
+        modified_system_prompt += f"\n\PLEASE ANSWER THE FOLLOWING QN: {question}"
     if tone:
         modified_system_prompt += f"\n\nTONE: The tone of the podcast should be {tone}."
     if length:
@@ -97,10 +112,15 @@ def generate_podcast(
         }
         modified_system_prompt += f"\n\nLENGTH: {length_instructions[length]}"
     if language:
-        modified_system_prompt += f"\n\nOUTPUT LANGUAGE <IMPORTANT>: The the podcast should be {language}."
+        modified_system_prompt += (
+            f"\n\nOUTPUT LANGUAGE <IMPORTANT>: The the podcast should be {language}."
+        )
 
     # Call the LLM
-    llm_output = generate_script(modified_system_prompt, text, Dialogue)
+    if length == "Short (1-2 min)":
+        llm_output = generate_script(modified_system_prompt, text, ShortDialogue)
+    else:
+        llm_output = generate_script(modified_system_prompt, text, MediumDialogue)
     logger.info(f"Generated dialogue: {llm_output}")
 
     # Process the dialogue
@@ -118,7 +138,9 @@ def generate_podcast(
         total_characters += len(line.text)
 
         # Get audio file path
-        audio_file_path = generate_audio(line.text, line.speaker, language_mapping[language])
+        audio_file_path = generate_audio(
+            line.text, line.speaker, language_mapping[language]
+        )
         # Read the audio file into an AudioSegment
         audio_segment = AudioSegment.from_file(audio_file_path)
         audio_segments.append(audio_segment)
@@ -149,36 +171,48 @@ def generate_podcast(
 
 demo = gr.Interface(
     title="Open NotebookLM",
-    description="Convert your PDFs into podcasts with open-source AI models (Llama 3.1 405B and MeloTTS). \n \n Note: Only the text content of the PDFs will be processed. Images and tables are not included. The total content should be no more than 100,000 characters due to the context length of Llama 3.1 405B.",
+    description="""
+
+<table style="border-collapse: collapse; border: none; padding: 20px;">
+  <tr style="border: none;">
+    <td style="border: none; vertical-align: top; padding-right: 30px; padding-left: 30px;">
+      <img src="https://raw.githubusercontent.com/gabrielchua/open-notebooklm/main/icon.png" alt="Open NotebookLM" width="120" style="margin-bottom: 10px;">
+    </td>
+    <td style="border: none; vertical-align: top; padding: 10px;">
+      <p style="margin-bottom: 15px;"><strong>Convert</strong> your PDFs into podcasts with open-source AI models (Llama 3.1 405B and MeloTTS).</p>
+      <p style="margin-top: 15px;">Note: Only the text content of the PDFs will be processed. Images and tables are not included. The total content should be no more than 100,000 characters due to the context length of Llama 3.1 405B.</p>
+    </td>
+  </tr>
+</table>
+""",
     fn=generate_podcast,
     inputs=[
         gr.File(
-            label="1. 📄 Upload your PDF(s)",
-            file_types=[".pdf"],
-            file_count="multiple"
+            label="1. 📄 Upload your PDF(s)", file_types=[".pdf"], file_count="multiple"
         ),
         gr.Textbox(
             label="2. 🔗 Paste a URL (optional)",
-            placeholder="Enter a URL to include its content"
+            placeholder="Enter a URL to include its content",
         ),
-        gr.Radio(
+        gr.Textbox(label="3. 🤔 Do you have a specific question or topic in mind?"),
+        gr.Dropdown(
             choices=["Fun", "Formal"],
-            label="3. 🎭 Choose the tone",
+            label="4. 🎭 Choose the tone",
             value="Fun"
         ),
-        gr.Radio(
+        gr.Dropdown(
             choices=["Short (1-2 min)", "Medium (3-5 min)"],
-            label="4. ⏱️ Choose the length",
+            label="5. ⏱️ Choose the length",
             value="Medium (3-5 min)"
         ),
         gr.Dropdown(
             choices=["English", "Spanish", "French", "Chinese", "Japanese", "Korean"],
             value="English",
-            label="5. 🌐 Choose the language (Highly experimental, English is recommended)",
+            label="6. 🌐 Choose the language"
         ),
     ],
     outputs=[
-        gr.Audio(label="Audio", format="mp3"),
+        gr.Audio(label="Podcast", format="mp3"),
         gr.Markdown(label="Transcript"),
     ],
     allow_flagging="never",
@@ -189,23 +223,26 @@ demo = gr.Interface(
         [
             [str(Path("examples/1310.4546v1.pdf"))],
             "",
+            "Explain this paper to me like I'm 5 years old",
             "Fun",
             "Short (1-2 min)",
-            "English"
+            "English",
         ],
         [
             [],
             "https://en.wikipedia.org/wiki/Hugging_Face",
+            "How did Hugging Face become so successful?",
             "Fun",
             "Short (1-2 min)",
-            "English"
+            "English",
         ],
         [
             [],
             "https://simple.wikipedia.org/wiki/Taylor_Swift",
+            "Why is Taylor Swift so popular?",
             "Fun",
             "Short (1-2 min)",
-            "English"
+            "English",
         ],
     ],
     cache_examples=True,

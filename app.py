@@ -21,30 +21,6 @@ from pydub import AudioSegment
 from prompts import SYSTEM_PROMPT
 from utils import generate_script, generate_podcast_audio, parse_url
 
-LANGUAGE_MAPPING = {
-    "English": "en",
-    "Chinese": "zh",
-    "French": "fr",
-    "German": "de",
-    "Hindi": "hi",
-    "Italian": "it",
-    "Japanese": "ja",
-    "Korean": "ko",
-    "Polish": "pl",
-    "Portuguese": "pt",
-    "Russian": "ru",
-    "Spanish": "es",
-    "Turkish": "tr"
-}
-
-MELO_TTS_LANGUAGE_MAPPING = {
-    "English": "EN",
-    "Spanish": "ES",
-    "French": "FR",
-    "Chinese": "ZJ",
-    "Japanese": "JP",
-    "Korean": "KR",
-}
 
 class DialogueItem(BaseModel):
     """A single dialogue item."""
@@ -79,6 +55,33 @@ def generate_podcast(
     use_advanced_audio: bool,
 ) -> Tuple[str, str]:
     """Generate the audio and transcript from the PDFs and/or URL."""
+
+    LANGUAGE_MAPPING = {
+        "English": "en",
+        "Chinese": "zh",
+        "French": "fr",
+        "German": "de",
+        "Hindi": "hi",
+        "Italian": "it",
+        "Japanese": "ja",
+        "Korean": "ko",
+        "Polish": "pl",
+        "Portuguese": "pt",
+        "Russian": "ru",
+        "Spanish": "es",
+        "Turkish": "tr"
+    }
+
+    MELO_TTS_LANGUAGE_MAPPING = {
+        "English": "EN",
+        "Spanish": "ES",
+        "French": "FR",
+        "Chinese": "ZJ",
+        "Japanese": "JP",
+        "Korean": "KR",
+    }
+
+
     text = ""
 
     # Check if the selected language is supported by MeloTTS when not using advanced audio

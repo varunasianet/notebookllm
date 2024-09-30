@@ -89,7 +89,7 @@ def generate_podcast(
     text = ""
 
     # Check if the selected language is supported by MeloTTS when not using advanced audio
-    if not use_advanced_audio and language not in MELO_TTS_LANGUAGE_MAPPING:
+    if not use_advanced_audio and language in ['German', 'Hindi', 'Italian', 'Polish', 'Portuguese', 'Russian', 'Turkish']:
         raise gr.Error(f"The selected language '{language}' is not supported without advanced audio generation. Please enable advanced audio generation or choose a supported language.")
 
     # Check if at least one input is provided

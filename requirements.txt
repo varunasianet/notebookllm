@@ -2,6 +2,7 @@ gradio==4.44.0
 granian==1.4
 loguru==0.7
 openai==1.50.2
+parler-tts @ git+https://github.com/huggingface/parler-tts@main
 promptic==0.7.5
 pydantic==2.7
 pypdf==4.1

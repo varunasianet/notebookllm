@@ -7,12 +7,19 @@ Functions:
 - get_audio: Get the audio from the TTS model from HF Spaces.
 """
 
-import os
+import os   
 import requests
+import tempfile
 
+
+import soundfile as sf
+import torch
 from gradio_client import Client
 from openai import OpenAI
+from parler_tts import ParlerTTSForConditionalGeneration
 from pydantic import ValidationError
+from transformers import AutoTokenizer
+
 
 MODEL_ID = "accounts/fireworks/models/llama-v3p1-405b-instruct"
 JINA_URL = "https://r.jina.ai/"
@@ -24,6 +31,10 @@ client = OpenAI(
 
 hf_client = Client("mrfakename/MeloTTS")
 
+# Initialize the model and tokenizer (do this outside the function for efficiency)
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
+model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(device)
+tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
 
 def generate_script(system_prompt: str, input_text: str, output_model):
     """Get the dialogue from the LLM."""
@@ -68,19 +79,38 @@ def parse_url(url: str) -> str:
     return response.text
 
 
-def generate_audio(text: str, speaker: str, language: str) -> bytes:
-    """Get the audio from the TTS model from HF Spaces and adjust pitch if necessary."""
-    if speaker == "Guest":
-        accent = "EN-US" if language == "EN" else language
-        speed = 0.9
-    else:  # host
-        accent = "EN-Default" if language == "EN" else language
-        speed = 1
-    if language != "EN" and speaker != "Guest":
-        speed = 1.1
+def generate_audio(text: str, speaker: str, language: str, voice: str) -> str:
+    """Generate audio using the local Parler TTS model or HuggingFace client."""
+
+    if language == "EN":
+        # Adjust the description based on speaker and language
+        if speaker == "Guest":
+            description = f"{voice} has a slightly expressive and animated speech, speaking at a moderate speed with natural pitch variations. The voice is clear and close-up, as if recorded in a professional studio."
+        else:  # host
+            description = f"{voice} has a professional and engaging tone, speaking at a moderate to slightly faster pace. The voice is clear, warm, and sounds like a seasoned podcast host."
+
+        # Prepare inputs
+        input_ids = tokenizer(description, return_tensors="pt").input_ids.to(device)
+        prompt_input_ids = tokenizer(text, return_tensors="pt").input_ids.to(device)
+
+        # Generate audio
+        generation = model.generate(input_ids=input_ids, prompt_input_ids=prompt_input_ids)
+        audio_arr = generation.cpu().numpy().squeeze()
+
+        # Save to temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_file:
+            sf.write(temp_file.name, audio_arr, model.config.sampling_rate, format='mp3')
+        
+        return temp_file.name
     
-    # Generate audio
-    result = hf_client.predict(
-        text=text, language=language, speaker=accent, speed=speed, api_name="/synthesize"
-    )
-    return result
+    else:
+        accent = language
+        if speaker == "Guest":
+            speed = 0.9
+        else:  # host
+            speed = 1.1
+        # Generate audio
+        result = hf_client.predict(
+            text=text, language=language, speaker=accent, speed=speed, api_name="/synthesize"
+        )
+        return result

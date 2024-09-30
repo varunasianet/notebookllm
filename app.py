@@ -25,7 +25,7 @@ from utils import generate_script, generate_audio, parse_url
 class DialogueItem(BaseModel):
     """A single dialogue item."""
 
-    speaker: Literal["Host (Jane)", "Guest"]
+    speaker: Literal["Host (Jenna)", "Guest"]
     text: str
 
 
@@ -41,10 +41,12 @@ def generate_podcast(
     files: List[str],
     url: Optional[str],
     tone: Optional[str],
+    voice: Optional[str],
     length: Optional[str],
     language: str
 ) -> Tuple[str, str]:
     """Generate the audio and transcript from the PDFs and/or URL."""
+    print(tone, voice, length, language)
     text = ""
 
     # Change language to the appropriate code
@@ -55,6 +57,12 @@ def generate_podcast(
         "Chinese": "ZH",
         "Japanese": "JP",
         "Korean": "KR",
+    }
+
+    # Change voice to the appropriate code
+    voice_mapping = {
+        "Male": "Gary",
+        "Female": "Laura",
     }
 
     # Check if at least one input is provided
@@ -109,16 +117,17 @@ def generate_podcast(
     total_characters = 0
 
     for line in llm_output.dialogue:
+        print(line.speaker, line.text, language_mapping[language], voice_mapping[voice])
         logger.info(f"Generating audio for {line.speaker}: {line.text}")
-        if line.speaker == "Host (Jane)":
-            speaker = f"**Jane**: {line.text}"
+        if line.speaker == "Host (Jenna)":
+            speaker = f"**Jenna**: {line.text}"
         else:
             speaker = f"**{llm_output.name_of_guest}**: {line.text}"
         transcript += speaker + "\n\n"
         total_characters += len(line.text)
 
         # Get audio file path
-        audio_file_path = generate_audio(line.text, line.speaker, language_mapping[language])
+        audio_file_path = generate_audio(line.text, line.speaker, language_mapping[language], voice_mapping[voice])
         # Read the audio file into an AudioSegment
         audio_segment = AudioSegment.from_file(audio_file_path)
         audio_segments.append(audio_segment)
@@ -167,14 +176,19 @@ demo = gr.Interface(
             value="Fun"
         ),
         gr.Radio(
+            choices=["Male", "Female"],
+            label="4. 🎭 Choose the guest's voice",
+            value="Female"
+        ),
+        gr.Radio(
             choices=["Short (1-2 min)", "Medium (3-5 min)"],
-            label="4. ⏱️ Choose the length",
+            label="5. ⏱️ Choose the length",
             value="Medium (3-5 min)"
         ),
         gr.Dropdown(
             choices=["English", "Spanish", "French", "Chinese", "Japanese", "Korean"],
             value="English",
-            label="5. 🌐 Choose the language (Highly experimental, English is recommended)",
+            label="6. 🌐 Choose the language (Highly experimental, English is recommended)",
         ),
     ],
     outputs=[
@@ -190,13 +204,23 @@ demo = gr.Interface(
             [str(Path("examples/1310.4546v1.pdf"))],
             "",
             "Fun",
-            "Short (1-2 min)",
+            "Female",
+             "Medium (3-5 min)",
             "English"
         ],
         [
             [],
             "https://en.wikipedia.org/wiki/Hugging_Face",
             "Fun",
+            "Male"
+            "Short (1-2 min)",
+            "English"
+        ],
+        [
+            [],
+            "https://simple.wikipedia.org/wiki/Taylor_Swift",
+            "Fun",
+            "Female"
             "Short (1-2 min)",
             "English"
         ],

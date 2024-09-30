@@ -79,7 +79,6 @@ def parse_url(url: str) -> str:
     response = requests.get(full_url, timeout=60)
     return response.text
 
-@spaces.GPU
 def generate_audio(text: str, speaker: str, language: str, voice: str) -> str:
     """Generate audio using the local Parler TTS model or HuggingFace client."""
 

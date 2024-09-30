@@ -46,7 +46,6 @@ def generate_podcast(
     language: str
 ) -> Tuple[str, str]:
     """Generate the audio and transcript from the PDFs and/or URL."""
-    print(tone, voice, length, language)
     text = ""
 
     # Change language to the appropriate code
@@ -117,8 +116,7 @@ def generate_podcast(
     total_characters = 0
 
     for line in llm_output.dialogue:
-        print(line.speaker, line.text, language_mapping[language], voice_mapping[voice])
-        logger.info(f"Generating audio for {line.speaker}: {line.text}")
+        logger.info(f"Generating audio for {line.speaker}, {language} and {voice}: {line.text}")
         if line.speaker == "Host (Jenna)":
             speaker = f"**Jenna**: {line.text}"
         else:

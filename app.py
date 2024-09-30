@@ -21,6 +21,21 @@ from pydub import AudioSegment
 from prompts import SYSTEM_PROMPT
 from utils import generate_script, generate_audio, parse_url
 
+LANGUAGE_MAPPING = {
+    "English": "en",
+    "Chinese": "zh",
+    "French": "fr",
+    "German": "de",
+    "Hindi": "hi",
+    "Italian": "it",
+    "Japanese": "ja",
+    "Korean": "ko",
+    "Polish": "pl",
+    "Portuguese": "pt",
+    "Russian": "ru",
+    "Spanish": "es",
+    "Turkish": "tr"
+}
 
 class DialogueItem(BaseModel):
     """A single dialogue item."""
@@ -139,7 +154,7 @@ def generate_podcast(
 
         # Get audio file path
         audio_file_path = generate_audio(
-            line.text, line.speaker, language_mapping[language]
+            line.text, line.speaker, LANGUAGE_MAPPING[language]
         )
         # Read the audio file into an AudioSegment
         audio_segment = AudioSegment.from_file(audio_file_path)
@@ -206,7 +221,7 @@ demo = gr.Interface(
             value="Medium (3-5 min)"
         ),
         gr.Dropdown(
-            choices=["English", "Spanish", "French", "Chinese", "Japanese", "Korean"],
+            choices=list(LANGUAGE_MAPPING.keys()),
             value="English",
             label="6. 🌐 Choose the language"
         ),

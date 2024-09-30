@@ -9,10 +9,12 @@ Functions:
 
 import os
 import requests
-
 from gradio_client import Client
 from openai import OpenAI
 from pydantic import ValidationError
+
+from bark import SAMPLE_RATE, generate_audio, preload_models
+from scipy.io.wavfile import write as write_wav
 
 MODEL_ID = "accounts/fireworks/models/llama-v3p1-405b-instruct"
 JINA_URL = "https://r.jina.ai/"
@@ -22,7 +24,10 @@ client = OpenAI(
     api_key=os.getenv("FIREWORKS_API_KEY"),
 )
 
-hf_client = Client("mrfakename/MeloTTS")
+# hf_client = Client("mrfakename/MeloTTS")
+
+# download and load all models
+preload_models()
 
 
 def generate_script(system_prompt: str, input_text: str, output_model):
@@ -73,23 +78,34 @@ def parse_url(url: str) -> str:
     return response.text
 
 
-def generate_audio(text: str, speaker: str, language: str) -> bytes:
-    """Get the audio from the TTS model from HF Spaces and adjust pitch if necessary."""
-    if speaker == "Guest":
-        accent = "EN-US" if language == "EN" else language
-        speed = 0.9
-    else:  # host
-        accent = "EN-Default" if language == "EN" else language
-        speed = 1
-    if language != "EN" and speaker != "Guest":
-        speed = 1.1
+def generate_audio(text: str, speaker: str, language: str) -> str:
 
-    # Generate audio
-    result = hf_client.predict(
-        text=text,
-        language=language,
-        speaker=accent,
-        speed=speed,
-        api_name="/synthesize",
-    )
-    return result
+    audio_array = generate_audio(text, history_prompt=f"v2/{language}_speaker_{'1' if speaker == 'Host (Jane)' else '3'}")
+
+    file_path = f"audio_{language}_{speaker}.mp3"
+
+    # save audio to disk
+    write_wav(file_path, SAMPLE_RATE, audio_array)
+
+    return file_path
+
+
+    # """Get the audio from the TTS model from HF Spaces and adjust pitch if necessary."""
+    # if speaker == "Guest":
+    #     accent = "EN-US" if language == "EN" else language
+    #     speed = 0.9
+    # else:  # host
+    #     accent = "EN-Default" if language == "EN" else language
+    #     speed = 1
+    # if language != "EN" and speaker != "Guest":
+    #     speed = 1.1
+
+    # # Generate audio
+    # result = hf_client.predict(
+    #     text=text,
+    #     language=language,
+    #     speaker=accent,
+    #     speed=speed,
+    #     api_name="/synthesize",
+    # )
+    # return result

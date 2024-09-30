@@ -204,15 +204,15 @@ demo = gr.Interface(
             [str(Path("examples/1310.4546v1.pdf"))],
             "",
             "Fun",
-            "Female",
-             "Medium (3-5 min)",
+            "Male",
+            "Medium (3-5 min)",
             "English"
         ],
         [
             [],
             "https://en.wikipedia.org/wiki/Hugging_Face",
             "Fun",
-            "Male"
+            "Male",
             "Short (1-2 min)",
             "English"
         ],
@@ -220,7 +220,7 @@ demo = gr.Interface(
             [],
             "https://simple.wikipedia.org/wiki/Taylor_Swift",
             "Fun",
-            "Female"
+            "Female",
             "Short (1-2 min)",
             "English"
         ],

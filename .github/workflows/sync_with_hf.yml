@@ -14,8 +14,6 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-      - name: Remove icon.png
-        run: rm -f icon.png
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}

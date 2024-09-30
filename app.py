@@ -164,7 +164,7 @@ def generate_podcast(
         transcript += speaker + "\n\n"
         total_characters += len(line.text)
 
-        language_for_tts = language
+        language_for_tts = LANGUAGE_MAPPING['language']
 
         if not use_advanced_audio:
             language_for_tts = MELO_TTS_LANGUAGE_MAPPING[language_for_tts]

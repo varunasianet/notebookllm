@@ -148,9 +148,11 @@ def generate_podcast_audio(
 
 def _use_suno_model(text: str, speaker: str, language: str, random_voice_number: int) -> str:
     """Generate advanced audio using Bark."""
+    host_voice_num = str(random_voice_number)
+    guest_voice_num = str(random_voice_number + 1)
     audio_array = generate_audio(
         text,
-        history_prompt=f"v2/{language}_speaker_{random_voice_number if speaker == 'Host (Jane)' else random_voice_number + 1}",
+        history_prompt=f"v2/{language}_speaker_{host_voice_num if speaker == 'Host (Jane)' else guest_voice_num}",
     )
     file_path = f"audio_{language}_{speaker}.mp3"
     write_wav(file_path, SAMPLE_RATE, audio_array)

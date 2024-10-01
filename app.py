@@ -65,8 +65,8 @@ def generate_podcast(
 
     text = ""
 
-    # Choose random number from 0 to 9
-    random_voice_number = random.randint(0, 9) # this is for suno model
+    # Choose random number from 0 to 8
+    random_voice_number = random.randint(0, 8) # this is for suno model
 
     if not use_advanced_audio and language in NOT_SUPPORTED_IN_MELO_TTS:
         raise gr.Error(ERROR_MESSAGE_NOT_SUPPORTED_IN_MELO_TTS)

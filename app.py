@@ -219,8 +219,8 @@ demo = gr.Interface(
     api_name=UI_API_NAME,
     theme=gr.themes.Soft(),
     concurrency_limit=UI_CONCURRENCY_LIMIT,
-    # examples=UI_EXAMPLES,
-    # cache_examples=UI_CACHE_EXAMPLES,
+    examples=UI_EXAMPLES,
+    cache_examples=UI_CACHE_EXAMPLES,
 )
 
 if __name__ == "__main__":

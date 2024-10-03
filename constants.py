@@ -121,7 +121,7 @@ UI_INPUTS = {
     },
     "advanced_audio": {
         "label": "7. 🔄 Use advanced audio generation? (Experimental)",
-        "value": False,
+        "value": True,
     },
 }
 UI_OUTPUTS = {

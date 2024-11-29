@@ -45,7 +45,6 @@ hf_client = Client(MELO_TTS_SPACES_ID)
 # Download and load all models for Bark
 preload_models()
 
-
 def generate_script(
     system_prompt: str,
     input_text: str,
